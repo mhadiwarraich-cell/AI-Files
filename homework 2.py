@@ -1,127 +1,90 @@
 
 import cv2
-import numpy as np
 
+# Load face detection model
+face_cascade = cv2.CascadeClassifier(
+    cv2.data.haarcascades +
+    "haarcascade_frontalface_default.xml"
+)
 
+# Start webcam
 camera = cv2.VideoCapture(0)
 
 if not camera.isOpened():
     print("Error: Webcam not found!")
     exit()
 
-
-mode = "original"
-
-print("IMAGE PROCESSING APPLICATION")
-print("----------------------------")
-print("0 - Original Image")
-print("1 - Red Filter")
-print("2 - Green Filter")
-print("3 - Blue Filter")
-print("4 - Canny Edge Detection")
-print("5 - Sobel Edge Detection")
-print("6 - Laplacian Edge Detection")
-print("S - Save Image")
-print("Q - Quit")
+print("REAL-TIME FACE TRACKING & PEOPLE COUNT")
+print("Press Q to quit")
 
 while True:
 
-    # Read webcam frame
+    # Capture webcam frame
     success, frame = camera.read()
 
     if not success:
         print("Cannot read webcam!")
         break
 
-   
-    result = frame.copy()
+    # Flip camera
+    frame = cv2.flip(frame, 1)
 
-  
+    # Convert image to grayscale
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
+    # Detect faces
+    faces = face_cascade.detectMultiScale(
+        gray,
+        scaleFactor=1.1,
+        minNeighbors=5,
+        minSize=(40, 40)
+    )
 
-    if mode == "red":
-        result[:, :, 0] = 0
-        result[:, :, 1] = 0
+    # Count detected faces
+    count = len(faces)
 
-    elif mode == "green":
-        result[:, :, 0] = 0
-        result[:, :, 2] = 0
+    # Draw rectangles around faces
+    for (x, y, w, h) in faces:
 
-    elif mode == "blue":
-        result[:, :, 1] = 0
-        result[:, :, 2] = 0
+        cv2.rectangle(
+            frame,
+            (x, y),
+            (x + w, y + h),
+            (0, 255, 0),
+            2
+        )
 
-   
-    elif mode == "canny":
-        edges = cv2.Canny(gray, 100, 200)
-        result = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+        # Display face label
+        cv2.putText(
+            frame,
+            "Face Detected",
+            (x, y - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (0, 255, 0),
+            2
+        )
 
-    
-    elif mode == "sobel":
-        x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
-        y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
-
-        edges = cv2.magnitude(x, y)
-        edges = cv2.convertScaleAbs(edges)
-
-        result = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-
-    elif mode == "laplacian":
-        edges = cv2.Laplacian(gray, cv2.CV_64F)
-        edges = cv2.convertScaleAbs(edges)
-
-        result = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-
-   
+    # Display people count
     cv2.putText(
-        result,
-        "Mode: " + mode,
+        frame,
+        "People Count: " + str(count),
         (20, 40),
         cv2.FONT_HERSHEY_SIMPLEX,
         1,
-        (0, 255, 0),
+        (0, 0, 255),
         2
     )
 
-    
-    cv2.imshow("Image Processing Application", result)
+    # Display webcam
+    cv2.imshow("Face Tracking and People Count", frame)
 
- 
-    key = cv2.waitKey(1) & 0xFF
-
-  
-    if key == ord('0'):
-        mode = "original"
-
-    elif key == ord('1'):
-        mode = "red"
-
-    elif key == ord('2'):
-        mode = "green"
-
-    elif key == ord('3'):
-        mode = "blue"
-
-
-    elif key == ord('4'):
-        mode = "canny"
-
-    elif key == ord('5'):
-        mode = "sobel"
-
-    elif key == ord('6'):
-        mode = "laplacian"
-
- 
-    elif key == ord('s'):
-        cv2.imwrite("processed_image.jpg", result)
-        print("Image saved successfully!")
-
-  
-    elif key == ord('q'):
-        print("Application closed!")
+    # Quit using Q
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
+# Release webcam
 camera.release()
 cv2.destroyAllWindows()
+
+print("Application closed!")
