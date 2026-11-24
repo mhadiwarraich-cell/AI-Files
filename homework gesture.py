@@ -4,7 +4,7 @@ import mediapipe as mp
 import pyautogui
 import time
 
-# Setup
+
 mp_hands = mp.solutions.hands
 draw = mp.solutions.drawing_utils
 hands = mp_hands.Hands(max_num_hands=1,
@@ -13,7 +13,7 @@ cap = cv2.VideoCapture(0)
 SCROLL_AMOUNT, DELAY = 100, 0.15
 last_scroll = 0
 
-# Count raised fingers (thumb excluded)
+
 def count_fingers(hand):
     lm = hand.landmark
     tips = [8, 12, 16, 20]
@@ -45,7 +45,7 @@ while cap.isOpened():
             gesture, color = "Hand detected - waiting", (0, 255, 255)
             direction = 0
 
-        # Scroll with cooldown
+       
         if direction and time.time() - last_scroll >= DELAY:
             pyautogui.scroll(direction * SCROLL_AMOUNT)
             last_scroll = time.time()
